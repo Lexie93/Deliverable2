@@ -1,0 +1,9 @@
+language: java
+jdk:
+- openjdk8
+addons:
+    sonarcloud:
+        organization: lexie93
+        token: $SONAR_TOKEN
+script:
+  - mvn clean verify install sonar:sonar -Pcoverage -Dsonar.projectKey=Lexie93_RetrieveTickets -Dsonar.language=java -Dsonar.sources=src -Dsonar.java.binaries=.
