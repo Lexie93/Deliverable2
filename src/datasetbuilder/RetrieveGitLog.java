@@ -93,9 +93,9 @@ public class RetrieveGitLog {
 					if (comm!=null)
 						commits.add(comm);
 					comm = new CommitWithChanges(LocalDate.parse(line.split(":")[1]));
-					br.readLine();
 				} else if (line.endsWith(".java")){
-					comm.addChangedFile(line, 0, 0);
+					if (comm!=null)
+						comm.addChangedFile(line, 0, 0);
 				}
 			}
 			//save last commit data
@@ -117,7 +117,6 @@ public class RetrieveGitLog {
 			BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			if ((line = br.readLine())!=null){
 				date = LocalDate.parse(line);
-				br.readLine();
 				while ((line = br.readLine())!=null){
 					if (line.endsWith(".java")){
 						if (line.split("\t")[0].equals("R100")){
@@ -168,7 +167,6 @@ public class RetrieveGitLog {
 			BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
 			if ((line = br.readLine())!=null){
 				comm = new CommitWithChanges(LocalDate.parse(line));
-				br.readLine();
 				while ((line = br.readLine())!=null){
 					if (line.endsWith(".java")){
 						comm.addChangedFile(line.split("\t")[2], Integer.parseInt(line.split("\t")[0]), Integer.parseInt(line.split("\t")[1]));

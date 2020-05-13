@@ -92,6 +92,8 @@ public class RetrieveJiraTickets {
 		   double p;
 		   int predictedIV;
 		   ArrayList<Double> window = new ArrayList<Double>();
+		   if (windowSize == 0)
+			   return;
 		   for(int i=0; i<tickets.size(); i++){
 			   if (tickets.get(i).getInjectedVersion()!=null){
 				   if (tickets.get(i).hasEstimatedIv()==false){
