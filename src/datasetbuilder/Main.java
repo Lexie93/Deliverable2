@@ -1,10 +1,11 @@
 package datasetbuilder;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
-import boundaries.CSVWriter;
 import entities.JiraTicket;
 import entities.Release;
+import utilities.CSVWriter;
 
 public class Main {
 	public static void main(String[] args){
@@ -14,28 +15,32 @@ public class Main {
 		   String outnameInfo = projName + "VersionInfo.csv";
 		   String outnameFiles = projName + "VersionFiles.csv";
 		   RetrieveGitLog gitRetriever = new RetrieveGitLog("C:/Users/Alex/Desktop/Università/ISW2/Falessi/Progetto/Bookkeeper/bookkeeper");
-		   CSVWriter csvWriter = new CSVWriter("C:/Users/Alex/Desktop/Università/ISW2/Falessi/Progetto/Deliverable2/Deliverable2/");
+		   CSVWriter csvWriter = new CSVWriter("C:/Users/Alex/Desktop/Università/ISW2/Falessi/Progetto/progetto/Deliverable2/");
 		   ArrayList<JiraTicket> tickets;
+		   ArrayList<Release> totalReleases = (ArrayList<Release>) RetrieveJiraReleases.getReleases(projName);
+		   int ver = 0;
+		   Iterator<Release> iter;
 		   
-		   ArrayList<Release> totalReleases = RetrieveJiraReleases.getReleases(projName);
 		   if (totalReleases.size() < 6)
 	            return;
 		   		   
 		   gitRetriever.setReleasesCommits(totalReleases);
-		   for(int i=0; i<totalReleases.size(); i++){
-			   if (!totalReleases.get(i).getCommits().isEmpty()){
-				   totalReleases.get(i).setFiles(gitRetriever.getCommitFiles(gitRetriever.getLastReleaseCommit(totalReleases.get(i))));
-				   totalReleases.get(i).setVersion(i+1);
+		   iter = totalReleases.iterator();
+		   while(iter.hasNext()){
+			   Release release = iter.next();
+			   if (!release.getCommits().isEmpty()){
+				   ver++;
+				   release.setFiles(gitRetriever.getCommitFiles(gitRetriever.getLastReleaseCommit(release)));
+				   release.setVersion(ver);
 			   } else {
 				   //release has no commit, remove it
-				   totalReleases.remove(i);
-				   i--;
+				   iter.remove();
 			   }
 		   }
-		   tickets = RetrieveJiraTickets.retrieveTickets(projName, totalReleases);
+		   tickets = (ArrayList<JiraTicket>) RetrieveJiraTickets.retrieveTickets(projName, totalReleases);
 		   RetrieveJiraTickets.fillAndSortTickets(tickets, totalReleases, gitRetriever);
 		   
-		   ArrayList<Release> releases = new ArrayList<Release>(totalReleases.subList(0, totalReleases.size()/2 + (totalReleases.size()%2)));
+		   ArrayList<Release> releases = new ArrayList<>(totalReleases.subList(0, totalReleases.size()/2 + (totalReleases.size()%2)));
 		   
 		   gitRetriever.setReleasesMetrics(releases);
 		   csvWriter.printReleasesInfo(outnameInfo, releases);

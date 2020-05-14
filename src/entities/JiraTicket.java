@@ -2,7 +2,7 @@ package entities;
 
 import java.time.LocalDate;
 
-public class JiraTicket implements Comparable <JiraTicket>{
+public class JiraTicket /*implements Comparable<JiraTicket>*/{
 
 	private String id;
 	private LocalDate creationDate;
@@ -67,8 +67,4 @@ public class JiraTicket implements Comparable <JiraTicket>{
 		this.injectedVersion = injectedVersion;
 	}
 	
-	@Override
-    public int compareTo(JiraTicket j) {
-        return this.getFixedVersion().compareTo(j.getFixedVersion());
-    }
 }

@@ -2,6 +2,7 @@ package entities;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ReleaseFile{
 	
@@ -28,7 +29,7 @@ public class ReleaseFile{
 		this.maxChurn = 0;
 		this.maxChgSetSize = 0;
 		this.fixNumber = 0;
-		this.authors = new ArrayList<String>();
+		this.authors = new ArrayList<>();
 		this.creationDate = null;
 	}
 
@@ -62,7 +63,7 @@ public class ReleaseFile{
 	
 	public int getWeightedAge(){
 		if (getLocModified()>0)
-			return (int) Math.round(((float) weightedLocAgeSum )/getLocModified());
+			return Math.round(((float) weightedLocAgeSum )/getLocModified());
 		return 0;
 	}
 	
@@ -90,7 +91,7 @@ public class ReleaseFile{
 		return name;
 	}
 	
-	public ArrayList<String> getAuthors(){
+	public List<String> getAuthors(){
 		return authors;
 	}
 	
@@ -104,7 +105,7 @@ public class ReleaseFile{
 	}
 	
 	public boolean isBuggy(){
-		return bugs>0 ? true : false;
+		return bugs>0;
 	}
 	
 	public int getBugs() {
@@ -150,21 +151,21 @@ public class ReleaseFile{
 	//round avg to closest int
 	public int getAvgLocAdded(){
 		if (revisions>0)
-			return (int) Math.round(((float) locAdded )/revisions);
+			return Math.round(((float) locAdded )/revisions);
 		return 0;
 	}
 	
 	//round avg to closest int
 	public int getAvgChurn(){
 		if (revisions>0)
-			return (int) Math.round(((float) locAdded-locRemoved )/revisions);
+			return Math.round(((float) locAdded-locRemoved )/revisions);
 		return 0;
 	}
 	
 	//round avg to closest int
 	public int getAvgChgSetSize(){
 		if (revisions>0)
-			return (int) Math.round(((float) chgSetSize )/revisions);
+			return Math.round(((float) chgSetSize )/revisions);
 		return 0;
 	}
 	

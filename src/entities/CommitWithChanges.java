@@ -1,6 +1,7 @@
 package entities;
 
 import java.time.LocalDate;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class CommitWithChanges {
@@ -10,7 +11,7 @@ public class CommitWithChanges {
 	
 	public CommitWithChanges(LocalDate date){
 		this.date = date;
-		this.filesChanged = new TreeMap<String, int[]>();
+		this.filesChanged = new TreeMap<>();
 	}
 	
 	public LocalDate getDate(){
@@ -21,7 +22,7 @@ public class CommitWithChanges {
 		this.filesChanged.put(file, new int[]{addedLoc, removedLoc});
 	}
 	
-	public TreeMap<String, int[]> getFilesChanged(){
+	public SortedMap<String, int[]> getFilesChanged(){
 		return this.filesChanged;
 	}
 

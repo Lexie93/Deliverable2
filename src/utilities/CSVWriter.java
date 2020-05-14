@@ -1,15 +1,13 @@
-package boundaries;
+package utilities;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-
 import entities.JiraTicket;
 import entities.Release;
 
@@ -22,7 +20,7 @@ public class CSVWriter {
 		this.path=path;
 	}
 	
-	public void printReleasesInfo(String outname, ArrayList<Release> releases){
+	public void printReleasesInfo(String outname, List<Release> releases){
 		try (
             FileWriter writer= new FileWriter(path + outname);
             CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);)
@@ -38,7 +36,7 @@ public class CSVWriter {
 			}
 	}
 	
-	public void printJiraTickets(ArrayList<JiraTicket> tickets){
+	public void printJiraTickets(List<JiraTicket> tickets){
 		String fv;
 		String ov;
 		String iv;
@@ -68,7 +66,7 @@ public class CSVWriter {
 			}
 	}
 
-	public void printReleasesFiles(String outname, ArrayList<Release> releases) {
+	public void printReleasesFiles(String outname, List<Release> releases) {
 		int ver=0;
 		String bugged;
 		int ageInWeeks;

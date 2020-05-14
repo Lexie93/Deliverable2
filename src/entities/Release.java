@@ -1,9 +1,10 @@
 package entities;
 
 import java.time.LocalDate;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class Release implements Comparable <Release>{
+public class Release /*implements Comparable <Release>*/{
 	
 	private int version;
 	private String id;
@@ -29,20 +30,20 @@ public class Release implements Comparable <Release>{
 		this.version = version;
 	}
 
-	public TreeMap<String, ReleaseFile> getFiles() {
+	public SortedMap<String, ReleaseFile> getFiles() {
 		return files;
 	}
 
-	public void setFiles(TreeMap<String, ReleaseFile> files) {
-		this.files = files;
+	public void setFiles(SortedMap<String, ReleaseFile> sortedMap) {
+		this.files = (TreeMap<String, ReleaseFile>) sortedMap;
 	}
 
-	public TreeMap<String, String> getCommits() {
+	public SortedMap<String, String> getCommits() {
 		return commits;
 	}
 
-	public void setCommits(TreeMap<String, String> commits) {
-		this.commits = commits;
+	public void setCommits(SortedMap<String, String> commits) {
+		this.commits = (TreeMap<String, String>) commits;
 	}
 
 	public void setId(String id){
@@ -69,8 +70,4 @@ public class Release implements Comparable <Release>{
 		return date;
 	}
 	
-	@Override
-    public int compareTo(Release r) {
-        return this.getDate().compareTo(r.getDate());
-    }
 }
