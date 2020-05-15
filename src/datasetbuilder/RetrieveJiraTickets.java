@@ -24,6 +24,15 @@ public class RetrieveJiraTickets {
 		private RetrieveJiraTickets(){
 			//not called
 		}
+		
+		private static void setIV(List<Release> releases, JiraTicket ticket, JSONObject version){
+			for(Release rel : releases){
+				 if (rel.getId().equals(version.get("id"))){
+					 ticket.setInjectedVersion(rel);
+					 break;
+				 }
+			 }
+		}
 	  
 	   public static List<JiraTicket> retrieveTickets(String projName, List<Release> releases) {
 			   
@@ -53,12 +62,7 @@ public class RetrieveJiraTickets {
 	        		 if (versions.isEmpty()){
 	        			 ticket.setInjectedVersion(null);
 	        		 } else {
-	        			 for(Release rel : releases){
-	        				 if (rel.getId().equals(((JSONObject) versions.get(0)).get("id"))){
-	        					 ticket.setInjectedVersion(rel);
-	        					 break;
-	        				 }
-	        			 }
+	        			 setIV(releases, ticket, (JSONObject) versions.get(0));
 	        		 }
 	        		 tickets.add(ticket);
 	        		 
@@ -96,10 +100,10 @@ public class RetrieveJiraTickets {
 		   ArrayList<Double> window = new ArrayList<>();
 		   if (windowSize == 0)
 			   return;
-		   for(int i=0; i<tickets.size(); i++){
-			   if (tickets.get(i).getInjectedVersion()!=null){
-				   if (!tickets.get(i).hasEstimatedIv()){
-					   p = (((double) tickets.get(i).getFixedVersion().getVersion()) - tickets.get(i).getInjectedVersion().getVersion()) / (((double) tickets.get(i).getFixedVersion().getVersion()) - tickets.get(i).getOpeningVersion().getVersion());
+		   for(JiraTicket ticket : tickets){
+			   if (ticket.getInjectedVersion()!=null){
+				   if (!ticket.hasEstimatedIv()){
+					   p = (((double) ticket.getFixedVersion().getVersion()) - ticket.getInjectedVersion().getVersion()) / (((double) ticket.getFixedVersion().getVersion()) - ticket.getOpeningVersion().getVersion());
 					   if (counter==windowSize){
 						   sum-=window.get(0);
 						   window.remove(0);
@@ -110,36 +114,65 @@ public class RetrieveJiraTickets {
 					   sum+=p;
 				   }
 			   } else {
-				   predictedIV = tickets.get(i).getFixedVersion().getVersion() - ((int) (sum/windowSize)) * (tickets.get(i).getFixedVersion().getVersion() - tickets.get(i).getOpeningVersion().getVersion());
-				   if (predictedIV<1)
-					   predictedIV = 1;
-				   tickets.get(i).setInjectedVersion(releases.get(predictedIV-1));
-				   tickets.get(i).setEstimatedIv(true);
+				   predictedIV = ticket.getFixedVersion().getVersion() - ((int) (sum/windowSize)) * (ticket.getFixedVersion().getVersion() - ticket.getOpeningVersion().getVersion());
+				   predictedIV = Math.max(predictedIV, 1);
+				   ticket.setInjectedVersion(releases.get(predictedIV-1));
+				   ticket.setEstimatedIv(true);
 			   }
 		   }
 	   }
 	   
+	   private static void setFix(String fileName, List<Release> releases, RetrieveGitLog gitRetriever, CommitWithChanges comm){
+		   String updatedFileName;
+		   for(Release rel : releases){
+			   if (comm.getDate().compareTo(rel.getDate())<0){
+				   if ((updatedFileName=gitRetriever.getMatchingName(fileName, rel))!=null){
+					   rel.getFiles().get(updatedFileName).incFixNumber();
+				   }
+				   break;
+			   }
+		   }
+	   }
+	   
+	   private static void setBug(String fileName, List<Release> releases, RetrieveGitLog gitRetriever, JiraTicket tick){
+		   String updatedFileName;
+		   for(int i=tick.getInjectedVersion().getVersion(); i<tick.getFixedVersion().getVersion(); i++){
+			   if ((updatedFileName=gitRetriever.getMatchingName(fileName, releases.get(i-1)))!=null && releases.get(i-1).getFiles().containsKey(updatedFileName)){
+					   releases.get(i-1).getFiles().get(updatedFileName).incBugs();
+			   }
+	   		}
+	   }
+	   
 	   private static void setBugginessAndFixes(List<JiraTicket> tickets, List<Release> releases, RetrieveGitLog gitRetriever){
 		   ArrayList<CommitWithChanges> commits;
-		   String updatedFileName;
 		   for(JiraTicket tick : tickets){
 			   commits=(ArrayList<CommitWithChanges>) gitRetriever.getBuggyFilesAndFixes(tick.getId());
 			   for(CommitWithChanges comm : commits){
 				   for(String fileName : comm.getFilesChanged().keySet()){
-					   for(Release rel : releases){
-						   if (comm.getDate().compareTo(rel.getDate())<0){
-							   if ((updatedFileName=gitRetriever.getMatchingName(fileName, rel))!=null){
-								   rel.getFiles().get(updatedFileName).incFixNumber();
-							   }
-							   break;
-						   }
-					   }
-				   		for(int i=tick.getInjectedVersion().getVersion(); i<tick.getFixedVersion().getVersion(); i++){
-						   if ((updatedFileName=gitRetriever.getMatchingName(fileName, releases.get(i-1)))!=null && releases.get(i-1).getFiles().containsKey(updatedFileName)){
-								   releases.get(i-1).getFiles().get(updatedFileName).incBugs();
-						   }
-				   		}
+					   setFix(fileName, releases, gitRetriever, comm);
+					   setBug(fileName, releases, gitRetriever, tick);
 				   }
+			   }
+		   }
+	   }
+	   
+	   private static void setFV(List<Release> releases, LocalDate lastDate, JiraTicket ticket){
+		   for(Release rel : releases){
+			   if (lastDate.compareTo(rel.getDate())<0){
+				   ticket.setFixedVersion(rel);
+				   break;
+			   }
+		   }
+	   }
+	   
+	   private static void setOV(List<Release> releases, JiraTicket ticket){
+		   for(Release rel : releases){
+			   if (ticket.getCreationDate().compareTo(rel.getDate())<0){
+				   ticket.setOpeningVersion(rel);
+				   if (ticket.getInjectedVersion()!=null && ticket.getInjectedVersion().getDate().compareTo(ticket.getOpeningVersion().getDate())>0){
+						   ticket.setInjectedVersion(ticket.getOpeningVersion());
+				   }
+				   break;
 			   }
 		   }
 	   }
@@ -153,21 +186,8 @@ public class RetrieveJiraTickets {
 			   if (lastDate==null){
 				   iter.remove();
 			   } else {
-				   for(Release rel : releases){
-					   if (lastDate.compareTo(rel.getDate())<0){
-						   ticket.setFixedVersion(rel);
-						   break;
-					   }
-				   }
-				   for(Release rel : releases){
-					   if (ticket.getCreationDate().compareTo(rel.getDate())<0){
-						   ticket.setOpeningVersion(rel);
-						   if (ticket.getInjectedVersion()!=null && ticket.getInjectedVersion().getDate().compareTo(ticket.getOpeningVersion().getDate())>0){
-								   ticket.setInjectedVersion(ticket.getOpeningVersion());
-						   }
-						   break;
-					   }
-				   }
+				   setFV(releases, lastDate, ticket);
+				   setOV(releases, ticket);
 			   }
 		   }
 		   prepareTicketsForProportion(tickets);

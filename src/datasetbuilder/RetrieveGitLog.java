@@ -300,20 +300,18 @@ public class RetrieveGitLog {
 		}
 	}
 	
-	private void doRevisionsAndSetAuthors(List<Release> releases){
+	private void doRevisionsAndSetAuthors(Release release){
 		String updatedName;
 		CommitWithChanges comm;
 		int commitAge;
-		for(Release release : releases){
-			for(String commit : release.getCommits().keySet()){
-				if ((comm = getCommitChanges(commit)) != null){
-					for(String name : comm.getFilesChanged().keySet()){
-						updatedName=getMatchingName(name, release);
-						if (updatedName!=null && release.getFiles().containsKey(updatedName)){
-							commitAge = (int) ChronoUnit.WEEKS.between(comm.getDate(), release.getDate());
-							release.getFiles().get(updatedName).doRevision(comm.getFilesChanged().get(name)[0], comm.getFilesChanged().get(name)[1], comm.getFilesChanged().keySet().size(), commitAge);
-							release.getFiles().get(updatedName).addAuthor(release.getCommits().get(commit));
-						}
+		for(String commit : release.getCommits().keySet()){
+			if ((comm = getCommitChanges(commit)) != null){
+				for(String name : comm.getFilesChanged().keySet()){
+					updatedName=getMatchingName(name, release);
+					if (updatedName!=null && release.getFiles().containsKey(updatedName)){
+						commitAge = (int) ChronoUnit.WEEKS.between(comm.getDate(), release.getDate());
+						release.getFiles().get(updatedName).doRevision(comm.getFilesChanged().get(name)[0], comm.getFilesChanged().get(name)[1], comm.getFilesChanged().keySet().size(), commitAge);
+						release.getFiles().get(updatedName).addAuthor(release.getCommits().get(commit));
 					}
 				}
 			}
@@ -328,7 +326,8 @@ public class RetrieveGitLog {
 			}
 		}
 		setCreationDate(releases);
-		doRevisionsAndSetAuthors(releases);
+		for(Release release : releases)
+			doRevisionsAndSetAuthors(release);
 		recordIncrementalValues(releases);
 	}
 	
