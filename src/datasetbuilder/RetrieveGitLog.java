@@ -46,9 +46,8 @@ public class RetrieveGitLog {
 		this.reverseRenameTable = new TreeMap<>();
 		this.fileCreationTable = new TreeMap<>();
 	}
-
-	public LocalDate getTicketLastDate(String ticketId){
-		ProcessBuilder pb = new ProcessBuilder("git", "log", SHORTDATE, FORMAT + DATE, MAXCOUNT_1, GREP + ticketId + NO_NUMBER, GREP + ticketId + "$");
+	
+	private LocalDate getDate(ProcessBuilder pb){
 		pb.directory(filePath);
 		String line=null;
 		try {
@@ -61,6 +60,16 @@ public class RetrieveGitLog {
 		if (line==null)
 			return null;
 		return LocalDate.parse(line);
+	}
+	
+	public LocalDate getTicketLastDate(String ticketId){
+		ProcessBuilder pb = new ProcessBuilder("git", "log", SHORTDATE, FORMAT + DATE, MAXCOUNT_1, GREP + ticketId + NO_NUMBER, GREP + ticketId + "$");
+		return getDate(pb);
+	}
+	
+	private LocalDate getFileCreationDate(String fileName){
+		ProcessBuilder pb = new ProcessBuilder("git", "log", "--follow", FORMAT + DATE, SHORTDATE, "--diff-filter=A", "--", fileName);
+		return getDate(pb);
 	}
 	
 	public List<LocalDate> getTicketDates(String ticketId){
@@ -232,22 +241,6 @@ public class RetrieveGitLog {
 			}
 			releases.get(i).setCommits(commits);
 		}
-	}
-	
-	private LocalDate getFileCreationDate(String fileName){
-		ProcessBuilder pb = new ProcessBuilder("git", "log", "--follow", FORMAT + DATE, SHORTDATE, "--diff-filter=A", "--", fileName);
-		pb.directory(filePath);
-		String line=null;
-		try {
-			Process process = pb.start();
-			BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			line = br.readLine();
-		} catch(IOException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
-		if (line == null)
-			return null;
-		return LocalDate.parse(line);
 	}
 	
 	//retrieve file name in the specific release
