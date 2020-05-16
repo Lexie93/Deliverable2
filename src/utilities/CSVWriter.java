@@ -36,12 +36,12 @@ public class CSVWriter {
 			}
 	}
 	
-	public void printJiraTickets(List<JiraTicket> tickets){
+	public void printJiraTickets(String outname, List<JiraTicket> tickets){
 		String fv;
 		String ov;
 		String iv;
 		try (
-				FileWriter writer = new FileWriter(path + "tickets.csv");
+				FileWriter writer = new FileWriter(path + outname);
 				CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);)
 			{
 				printer.printRecord("TicketID","OpeningVersion","FixedVersion","InjectedVersion");
@@ -84,15 +84,17 @@ public class CSVWriter {
 	            			bugged = "yes";
 	            		else
 	            			bugged = "no";
-	            		ageInWeeks = (int) ChronoUnit.WEEKS.between(rel.getFiles().get(name).getCreationDate(), rel.getDate());
-	            		printer.printRecord(ver, rel.getFiles().get(name).getName(), rel.getFiles().get(name).getRevisions(),
-	            				rel.getFiles().get(name).getLoc(), rel.getFiles().get(name).getLocModified(), 
-	            				rel.getFiles().get(name).getLocAdded(), rel.getFiles().get(name).getMaxLocAdded(),
-	            				rel.getFiles().get(name).getAvgLocAdded(), rel.getFiles().get(name).getChurn(),
-	            				rel.getFiles().get(name).getMaxChurn(), rel.getFiles().get(name).getAvgChurn(), 
-	            				rel.getFiles().get(name).getAuthorsNumber(), rel.getFiles().get(name).getChgSetSize(),
-	            				rel.getFiles().get(name).getMaxChgSetSize(), rel.getFiles().get(name).getAvgChgSetSize(), 
-	            				ageInWeeks, rel.getFiles().get(name).getWeightedAge(), rel.getFiles().get(name).getFixNumber(), bugged);
+	            		if (rel.getFiles().get(name).getCreationDate() != null){
+	            			ageInWeeks = (int) ChronoUnit.WEEKS.between(rel.getFiles().get(name).getCreationDate(), rel.getDate());
+	            			printer.printRecord(ver, rel.getFiles().get(name).getName(), rel.getFiles().get(name).getRevisions(),
+	            					rel.getFiles().get(name).getLoc(), rel.getFiles().get(name).getLocModified(), 
+	            					rel.getFiles().get(name).getLocAdded(), rel.getFiles().get(name).getMaxLocAdded(),
+	            					rel.getFiles().get(name).getAvgLocAdded(), rel.getFiles().get(name).getChurn(),
+	            					rel.getFiles().get(name).getMaxChurn(), rel.getFiles().get(name).getAvgChurn(), 
+	            					rel.getFiles().get(name).getAuthorsNumber(), rel.getFiles().get(name).getChgSetSize(),
+	            					rel.getFiles().get(name).getMaxChgSetSize(), rel.getFiles().get(name).getAvgChgSetSize(), 
+	            					ageInWeeks, rel.getFiles().get(name).getWeightedAge(), rel.getFiles().get(name).getFixNumber(), bugged);
+	            		}
 	            	}
 	            }
 	            printer.flush();

@@ -48,7 +48,7 @@ public class RetrieveGitLog {
 	}
 
 	public LocalDate getTicketLastDate(String ticketId){
-		ProcessBuilder pb = new ProcessBuilder("git", "log", SHORTDATE, FORMAT + DATE, MAXCOUNT_1, GREP + ticketId + NO_NUMBER);
+		ProcessBuilder pb = new ProcessBuilder("git", "log", SHORTDATE, FORMAT + DATE, MAXCOUNT_1, GREP + ticketId + NO_NUMBER, GREP + ticketId + "$");
 		pb.directory(filePath);
 		String line=null;
 		try {
@@ -65,7 +65,7 @@ public class RetrieveGitLog {
 	
 	public List<LocalDate> getTicketDates(String ticketId){
 		ArrayList<LocalDate> dates = new ArrayList<>();
-		ProcessBuilder pb = new ProcessBuilder("git", "log", SHORTDATE, FORMAT + DATE, GREP + ticketId + NO_NUMBER);
+		ProcessBuilder pb = new ProcessBuilder("git", "log", SHORTDATE, FORMAT + DATE, GREP + ticketId + NO_NUMBER, GREP + ticketId + "$");
 		pb.directory(filePath);
 		String line=null;
 		try {
@@ -81,7 +81,7 @@ public class RetrieveGitLog {
 	}
 
 	public String getLastTicketCommit(String ticketId){
-		ProcessBuilder pb = new ProcessBuilder("git", "log", FORMAT + HASH, MAXCOUNT_1, GREP + ticketId + NO_NUMBER);
+		ProcessBuilder pb = new ProcessBuilder("git", "log", FORMAT + HASH, MAXCOUNT_1, GREP + ticketId + NO_NUMBER, GREP + ticketId + "$");
 		pb.directory(filePath);
 		String line=null;
 		try {
@@ -97,7 +97,7 @@ public class RetrieveGitLog {
 	public List<CommitWithChanges> getBuggyFilesAndFixes(String ticketId){
 		ArrayList<CommitWithChanges> commits = new ArrayList<>();
 		CommitWithChanges comm = null;
-		ProcessBuilder pb = new ProcessBuilder("git", "log", "--name-only", ONELINE, SHORTDATE, FORMAT + "\"Date:%cd\"", GREP + ticketId + NO_NUMBER);
+		ProcessBuilder pb = new ProcessBuilder("git", "log", "--name-only", ONELINE, SHORTDATE, FORMAT + "\"Date:%cd\"", GREP + ticketId + NO_NUMBER, GREP + ticketId + "$");
 		pb.directory(filePath);
 		String line=null;
 		try {
@@ -245,6 +245,8 @@ public class RetrieveGitLog {
 		} catch(IOException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
+		if (line == null)
+			return null;
 		return LocalDate.parse(line);
 	}
 	

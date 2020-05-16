@@ -10,11 +10,12 @@ import utilities.CSVWriter;
 public class Main {
 	public static void main(String[] args){
 		
-		   String projName ="BOOKKEEPER";
+		   String projName ="SYNCOPE";
 		   //Name of CSV for output
 		   String outnameInfo = projName + "VersionInfo.csv";
 		   String outnameFiles = projName + "VersionFiles.csv";
-		   RetrieveGitLog gitRetriever = new RetrieveGitLog("C:/Users/Alex/Desktop/Università/ISW2/Falessi/Progetto/Bookkeeper/bookkeeper");
+		   String outnameTicket = projName + "Tickets.csv";
+		   RetrieveGitLog gitRetriever = new RetrieveGitLog("C:/Users/Alex/Desktop/Università/ISW2/Falessi/Progetto/Syncope/syncope");
 		   CSVWriter csvWriter = new CSVWriter("C:/Users/Alex/Desktop/Università/ISW2/Falessi/Progetto/progetto/Deliverable2/");
 		   ArrayList<JiraTicket> tickets;
 		   ArrayList<Release> totalReleases = (ArrayList<Release>) RetrieveJiraReleases.getReleases(projName);
@@ -45,6 +46,6 @@ public class Main {
 		   gitRetriever.setReleasesMetrics(releases);
 		   csvWriter.printReleasesInfo(outnameInfo, releases);
 		   csvWriter.printReleasesFiles(outnameFiles, releases);
-		   csvWriter.printJiraTickets(tickets);
+		   csvWriter.printJiraTickets(outnameTicket, tickets);
 	   }
 }
