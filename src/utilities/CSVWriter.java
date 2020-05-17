@@ -8,6 +8,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+
+import entities.ClassifierEvaluation;
 import entities.JiraTicket;
 import entities.Release;
 
@@ -96,6 +98,24 @@ public class CSVWriter {
 	            					ageInWeeks, rel.getFiles().get(name).getWeightedAge(), rel.getFiles().get(name).getFixNumber(), bugged);
 	            		}
 	            	}
+	            }
+	            printer.flush();
+
+				} catch (IOException e) {
+					LOGGER.log(Level.SEVERE, e.getMessage(), e);
+				}
+	}
+	
+	public void printEvaluations(String proj, String outname, List<ClassifierEvaluation> evaluations){
+		try (
+	            FileWriter writer= new FileWriter(path + outname);
+	            CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);)
+				{
+	            printer.printRecord("Dataset","#TrainingRelease","Classifier","Precision","Recall","AUC","Kappa");
+	            for ( int i = 0; i < evaluations.size(); i++) {
+	            	printer.printRecord(proj, evaluations.get(i).getClassifier(), evaluations.get(i).getTrainingSize(),
+	            			evaluations.get(i).getEval().precision(1), evaluations.get(i).getEval().recall(1),
+	            			evaluations.get(i).getEval().areaUnderROC(1), evaluations.get(i).getEval().kappa());
 	            }
 	            printer.flush();
 
