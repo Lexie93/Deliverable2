@@ -18,6 +18,10 @@ import entities.ClassifierEvaluation;
 public class Weka {
 	
 	private static final Logger LOGGER = Logger.getLogger(Weka.class.getName());
+	
+	private Weka(){
+		//not called
+	}
 
 	public static List<ClassifierEvaluation> walkForwardEvaluations(String datasetPath){
 		int totalRevs;
