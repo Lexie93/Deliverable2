@@ -18,9 +18,52 @@ import entities.ClassifierEvaluation;
 public class Weka {
 	
 	private static final Logger LOGGER = Logger.getLogger(Weka.class.getName());
+	private static final double SPLIT_PERCENTAGE = 0.66;
 	
 	private Weka(){
 		//not called
+	}
+	
+	private static Evaluation evaluateNaiveBayes(Instances training, Instances testing){
+		NaiveBayes classifierNB = new NaiveBayes();
+		Evaluation eval;
+		try{
+			classifierNB.buildClassifier(training);
+			eval = new Evaluation(testing);
+			eval.evaluateModel(classifierNB, testing);
+			return eval;
+		}catch(Exception e){
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return null;
+	}
+	
+	private static Evaluation evaluateRandomForest(Instances training, Instances testing){
+		RandomForest classifierRF = new RandomForest();
+		Evaluation eval;
+		try{
+			classifierRF.buildClassifier(training);
+			eval = new Evaluation(testing);
+			eval.evaluateModel(classifierRF, testing);
+			return eval;
+		}catch(Exception e){
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return null;
+	}
+	
+	private static Evaluation evaluateIBk(Instances training, Instances testing){
+		IBk classifierIBk = new IBk();
+		Evaluation eval;
+		try{
+			classifierIBk.buildClassifier(training);
+			eval = new Evaluation(testing);
+			eval.evaluateModel(classifierIBk, testing);
+			return eval;
+		}catch(Exception e){
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+		}
+		return null;
 	}
 
 	public static List<ClassifierEvaluation> walkForwardEvaluations(String datasetPath){
@@ -30,18 +73,13 @@ public class Weka {
 		int lastTestInst = 0;
 		Instances training;
 		Instances testing;
-		Evaluation eval;
-		NaiveBayes classifierNB;
-		RandomForest classifierRF;
-		IBk classifierIBk;
 		ArrayList<ClassifierEvaluation> evaluations = new ArrayList<>();
 		try {
-			// load CSV
 			CSVLoader loader = new CSVLoader();
 			loader.setSource(new File(datasetPath));
-			Instances data = loader.getDataSet();//get instances object
+			Instances data = loader.getDataSet();
 			totalRevs = data.numDistinctValues(0);
-			totalTrainRevs = (int) Math.round((float) totalRevs * 0.66);
+			totalTrainRevs = (int) Math.round((float) totalRevs * SPLIT_PERCENTAGE);
 			for(int i=0; i<totalTrainRevs - 1; i++){
 				lastTrainInst = lastTestInst;
 				for(int j=lastTestInst; j<data.numInstances(); j++){
@@ -60,22 +98,10 @@ public class Weka {
 				training = new Instances(data, 0, lastTrainInst);
 				testing = new Instances(data, lastTrainInst, lastTestInst - lastTrainInst);
 				training.setClassIndex(training.numAttributes() - 1);
-				testing.setClassIndex(testing.numAttributes() - 1);	    	
-				classifierNB = new NaiveBayes();
-				classifierRF = new RandomForest();
-				classifierIBk = new IBk();
-				classifierNB.buildClassifier(training);
-				classifierRF.buildClassifier(training);
-				classifierIBk.buildClassifier(training);
-				eval = new Evaluation(testing);
-				eval.evaluateModel(classifierNB, testing); 
-				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, eval));
-				eval = new Evaluation(testing);
-				eval.evaluateModel(classifierRF, testing);
-				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, eval));
-				eval = new Evaluation(testing);
-				eval.evaluateModel(classifierIBk, testing);
-				evaluations.add(new ClassifierEvaluation("IBk", i+1, eval));
+				testing.setClassIndex(testing.numAttributes() - 1); 
+				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(training, testing)));
+				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(training, testing)));
+				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(training, testing)));
 			}
 	    } catch(Exception e){
 	    	LOGGER.log(Level.SEVERE, e.getMessage(), e);
