@@ -7,11 +7,13 @@ public class ClassifierEvaluation {
 	private String classifier;
 	private int trainingSize;
 	private Evaluation eval;
+	private boolean selection;
 	
-	public ClassifierEvaluation(String classifier, int trainingSize, Evaluation eval) {
+	public ClassifierEvaluation(String classifier, int trainingSize, Evaluation eval, boolean selection) {
 		this.classifier = classifier;
 		this.trainingSize = trainingSize;
 		this.eval = eval;
+		this.selection = selection;
 	}
 
 	public String getClassifier() {
@@ -24,6 +26,10 @@ public class ClassifierEvaluation {
 
 	public Evaluation getEval() {
 		return eval;
+	}
+	
+	public boolean hasFeatureSelection(){
+		return selection;
 	}
 	
 }

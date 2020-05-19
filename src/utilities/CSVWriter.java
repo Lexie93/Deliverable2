@@ -107,14 +107,16 @@ public class CSVWriter {
 	}
 	
 	public void printEvaluations(String proj, String outname, List<ClassifierEvaluation> evaluations){
+		String selection;
 		try (
 	            FileWriter writer= new FileWriter(path + outname);
 	            CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);)
 				{
-	            printer.printRecord("Dataset","#TrainingRelease","Classifier","Precision","Recall","AUC","Kappa");
+	            printer.printRecord("Dataset","#TrainingRelease","Classifier","FeatureSelection","Precision","Recall","AUC","Kappa");
 	            for ( int i = 0; i < evaluations.size(); i++) {
-	            	printer.printRecord(proj, evaluations.get(i).getClassifier(), evaluations.get(i).getTrainingSize(),
-	            			evaluations.get(i).getEval().precision(1), evaluations.get(i).getEval().recall(1),
+	            	selection = evaluations.get(i).hasFeatureSelection() ? "Yes" : "No";
+	            	printer.printRecord(proj, evaluations.get(i).getTrainingSize(), evaluations.get(i).getClassifier(), 
+	            			selection, evaluations.get(i).getEval().precision(1), evaluations.get(i).getEval().recall(1),
 	            			evaluations.get(i).getEval().areaUnderROC(1), evaluations.get(i).getEval().kappa());
 	            }
 	            printer.flush();

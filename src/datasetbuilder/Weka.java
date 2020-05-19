@@ -1,11 +1,16 @@
 package datasetbuilder;
 
+import weka.attributeSelection.BestFirst;
+import weka.attributeSelection.CfsSubsetEval;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
 import weka.core.converters.CSVLoader;
+import weka.filters.Filter;
+import weka.filters.supervised.attribute.AttributeSelection;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,11 +78,19 @@ public class Weka {
 		int lastTestInst = 0;
 		Instances training;
 		Instances testing;
+		Instances filteredTraining;
+		Instances filteredTesting;
 		ArrayList<ClassifierEvaluation> evaluations = new ArrayList<>();
+		AttributeSelection filter = new AttributeSelection();
+		CfsSubsetEval eval = new CfsSubsetEval();
+	    BestFirst search = new BestFirst();
+	    filter.setEvaluator(eval);
+	    filter.setSearch(search);
 		try {
 			CSVLoader loader = new CSVLoader();
 			loader.setSource(new File(datasetPath));
 			Instances data = loader.getDataSet();
+			filter.setInputFormat(data);
 			totalRevs = data.numDistinctValues(0);
 			totalTrainRevs = (int) Math.round((float) totalRevs * SPLIT_PERCENTAGE);
 			for(int i=0; i<totalTrainRevs - 1; i++){
@@ -98,10 +111,18 @@ public class Weka {
 				training = new Instances(data, 0, lastTrainInst);
 				testing = new Instances(data, lastTrainInst, lastTestInst - lastTrainInst);
 				training.setClassIndex(training.numAttributes() - 1);
-				testing.setClassIndex(testing.numAttributes() - 1); 
-				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(training, testing)));
-				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(training, testing)));
-				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(training, testing)));
+				testing.setClassIndex(testing.numAttributes() - 1);
+				filteredTraining = Filter.useFilter(training, filter);
+				filteredTesting = Filter.useFilter(testing, filter);
+				filteredTraining.setClassIndex(filteredTraining.numAttributes() - 1);
+				filteredTesting.setClassIndex(filteredTesting.numAttributes() - 1);
+				
+				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(training, testing), false));
+				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(filteredTraining, filteredTesting), true));
+				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(training, testing), false));
+				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(filteredTraining, filteredTesting), true));
+				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(training, testing), false));
+				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(filteredTraining, filteredTesting), true));
 			}
 	    } catch(Exception e){
 	    	LOGGER.log(Level.SEVERE, e.getMessage(), e);
