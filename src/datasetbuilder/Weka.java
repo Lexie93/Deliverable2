@@ -76,54 +76,69 @@ public class Weka {
 		int totalTrainRevs;
 		int lastTrainInst;
 		int lastTestInst = 0;
+		int defectInTraining = 0;
+		int defectInTesting;
+		double trainingPercentage;
+		double defectInTrainingPercentage;
+		double defectInTestingPercentage;
 		Instances training;
 		Instances testing;
-		Instances filteredTraining;
-		Instances filteredTesting;
+		Instances selectedTraining;
+		Instances selectedTesting;
 		ArrayList<ClassifierEvaluation> evaluations = new ArrayList<>();
 		AttributeSelection filter = new AttributeSelection();
 		CfsSubsetEval eval = new CfsSubsetEval();
 	    BestFirst search = new BestFirst();
 	    filter.setEvaluator(eval);
 	    filter.setSearch(search);
+	    
 		try {
 			CSVLoader loader = new CSVLoader();
 			loader.setSource(new File(datasetPath));
 			Instances data = loader.getDataSet();
+			data.setClassIndex(data.numAttributes() -1);
 			filter.setInputFormat(data);
 			totalRevs = data.numDistinctValues(0);
 			totalTrainRevs = (int) Math.round((float) totalRevs * SPLIT_PERCENTAGE);
+			
 			for(int i=0; i<totalTrainRevs - 1; i++){
+				defectInTesting = 0;
+				
 				lastTrainInst = lastTestInst;
-				for(int j=lastTestInst; j<data.numInstances(); j++){
-					if (data.get(j).value(0) - 1 <= i)
-						lastTrainInst++;
-					else
-						break;
+				while( (lastTrainInst < data.numInstances()) && (data.get(lastTrainInst).value(0) -1 <= i) ){
+					if (data.get(lastTrainInst).stringValue(data.classIndex()).equals("yes"))
+						defectInTraining++;
+					lastTrainInst++;
 				}
 				lastTestInst = lastTrainInst;
-				for(int j=lastTrainInst; j<data.numInstances(); j++){
-					if (data.get(j).value(0) - 1 <= i + 1)
-						lastTestInst++;
-					else
-						break;
+				while( (lastTestInst < data.numInstances()) && (data.get(lastTestInst).value(0) -1 <= i + 1) ){
+					if (data.get(lastTestInst).stringValue(data.classIndex()).equals("yes"))
+						defectInTesting++;
+					lastTestInst++;
 				}
+				
 				training = new Instances(data, 0, lastTrainInst);
 				testing = new Instances(data, lastTrainInst, lastTestInst - lastTrainInst);
 				training.setClassIndex(training.numAttributes() - 1);
 				testing.setClassIndex(testing.numAttributes() - 1);
-				filteredTraining = Filter.useFilter(training, filter);
-				filteredTesting = Filter.useFilter(testing, filter);
-				filteredTraining.setClassIndex(filteredTraining.numAttributes() - 1);
-				filteredTesting.setClassIndex(filteredTesting.numAttributes() - 1);
+				selectedTraining = Filter.useFilter(training, filter);
+				selectedTesting = Filter.useFilter(testing, filter);
+				selectedTraining.setClassIndex(selectedTraining.numAttributes() - 1);
+				selectedTesting.setClassIndex(selectedTesting.numAttributes() - 1);
+				trainingPercentage = (double) training.numInstances() / data.numInstances() * 100;
+				defectInTrainingPercentage = (double) defectInTraining / training.numInstances() * 100;
+				defectInTestingPercentage = (double) defectInTesting / testing.numInstances() * 100;
 				
-				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(training, testing), false));
-				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(filteredTraining, filteredTesting), true));
-				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(training, testing), false));
-				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(filteredTraining, filteredTesting), true));
-				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(training, testing), false));
-				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(filteredTraining, filteredTesting), true));
+				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(training, testing), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage));
+				evaluations.add(new ClassifierEvaluation("NaiveBayes", i+1, evaluateNaiveBayes(selectedTraining, selectedTesting), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage));
+				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(training, testing), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage));
+				evaluations.add(new ClassifierEvaluation("RandomForest", i+1, evaluateRandomForest(selectedTraining, selectedTesting), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage));
+				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(training, testing), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage));
+				evaluations.add(new ClassifierEvaluation("IBk", i+1, evaluateIBk(selectedTraining, selectedTesting), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage));
+			
+				defectInTraining += defectInTesting;
 			}
+			
 	    } catch(Exception e){
 	    	LOGGER.log(Level.SEVERE, e.getMessage(), e);
 	    }

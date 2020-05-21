@@ -112,12 +112,19 @@ public class CSVWriter {
 	            FileWriter writer= new FileWriter(path + outname);
 	            CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);)
 				{
-	            printer.printRecord("Dataset","#TrainingRelease","Classifier","FeatureSelection","Precision","Recall","AUC","Kappa");
-	            for ( int i = 0; i < evaluations.size(); i++) {
-	            	selection = evaluations.get(i).hasFeatureSelection() ? "Yes" : "No";
-	            	printer.printRecord(proj, evaluations.get(i).getTrainingSize(), evaluations.get(i).getClassifier(), 
-	            			selection, evaluations.get(i).getEval().precision(1), evaluations.get(i).getEval().recall(1),
-	            			evaluations.get(i).getEval().areaUnderROC(1), evaluations.get(i).getEval().kappa());
+	            printer.printRecord("Dataset","#TrainingRelease","%Training","%DefectiveInTraining","%DefectiveInTesting",
+	            					"Classifier","FeatureSelection","TP","TPRate","FP","FPRate","TN","TNRate","FN","FNRate","Precision","Recall","ROCArea","Kappa");
+	            for ( ClassifierEvaluation evaluation : evaluations) {
+	            	selection = evaluation.hasFeatureSelection() ? "Yes" : "No";
+	            	printer.printRecord(proj, evaluation.getTrainingSize(), evaluation.getTrainingPercentage(),
+	            			evaluation.getDefectInTrainingPercentage(), evaluation.getDefectInTestingPercentage(),
+	            			evaluation.getClassifier(),
+	            			selection, evaluation.getEval().numTruePositives(1), evaluation.getEval().truePositiveRate(1),
+	            			evaluation.getEval().numFalsePositives(1), evaluation.getEval().falsePositiveRate(1),
+	            			evaluation.getEval().numTrueNegatives(1), evaluation.getEval().trueNegativeRate(1),
+	            			evaluation.getEval().numFalseNegatives(1), evaluation.getEval().falseNegativeRate(1),
+	            			evaluation.getEval().precision(1), evaluation.getEval().recall(1),
+	            			evaluation.getEval().areaUnderROC(1), evaluation.getEval().kappa());
 	            }
 	            printer.flush();
 
