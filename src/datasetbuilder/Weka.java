@@ -2,6 +2,7 @@ package datasetbuilder;
 
 import weka.attributeSelection.BestFirst;
 import weka.attributeSelection.CfsSubsetEval;
+import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
@@ -12,6 +13,7 @@ import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
 import weka.filters.supervised.instance.SpreadSubsample;
+import weka.filters.supervised.instance.SMOTE;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,55 +34,40 @@ public class Weka {
 	private static final String NO_SAMPLING = "noSampling";
 	private static final String UNDERSAMPLING = "underSampling";
 	private static final String OVERSAMPLING = "overSampling";
+	private static final String SMOTE = "smote";
 	private static final String INVALIDSAMPLING = "Invalid sampling parameter";
+	private static final String INVALIDCLASSIFIER = "invalid classifier parameter";
 	
 	private Weka(){
 		//not called
 	}
 	
-	private static Evaluation evaluateNaiveBayes(Instances training, Instances testing, String sampling){
-		NaiveBayes classifierNB = new NaiveBayes();
-		try {
-			Evaluation eval = new Evaluation(testing);
-			switch(sampling){
-			case NO_SAMPLING:
-				classifierNB.buildClassifier(training);
-				eval.evaluateModel(classifierNB, testing);
-				return eval;
-			case UNDERSAMPLING:
-				FilteredClassifier fc = new FilteredClassifier();
-				fc.setClassifier(classifierNB);
-				SpreadSubsample  spreadSubsample = new SpreadSubsample();
-				String[] opts = new String[]{ "-M", "1.0"};
-				spreadSubsample.setOptions(opts);
-				fc.setFilter(spreadSubsample);
-				fc.buildClassifier(training);
-				eval.evaluateModel(fc, testing);
-				return eval;
-			case OVERSAMPLING:
-				break;
-			default:
-				LOGGER.log(Level.SEVERE, INVALIDSAMPLING);
-				
-			}
-		}catch(Exception e){
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+	private static Evaluation evaluateClassifier(String classif, Instances training, Instances testing, String sampling){
+		Classifier classifier;
+		FilteredClassifier fc = new FilteredClassifier();
+		switch(classif){
+		case NAIVEBAYES:
+			classifier =  new NaiveBayes();
+			break;
+		case RANDOMFOREST:
+			classifier = new RandomForest();
+			break;
+		case IBK:
+			classifier = new IBk();
+			break;
+		default:
+			LOGGER.log(Level.SEVERE, INVALIDCLASSIFIER);
+			return null;
 		}
-		return null;
-	}
-	
-	private static Evaluation evaluateRandomForest(Instances training, Instances testing, String sampling){
-		RandomForest classifierRF = new RandomForest();
 		try {
 			Evaluation eval = new Evaluation(testing);
 			switch(sampling){
 			case NO_SAMPLING:
-				classifierRF.buildClassifier(training);
-				eval.evaluateModel(classifierRF, testing);
+				classifier.buildClassifier(training);
+				eval.evaluateModel(classifier, testing);
 				return eval;
 			case UNDERSAMPLING:
-				FilteredClassifier fc = new FilteredClassifier();
-				fc.setClassifier(classifierRF);
+				fc.setClassifier(classifier);
 				SpreadSubsample  spreadSubsample = new SpreadSubsample();
 				String[] opts = new String[]{ "-M", "1.0"};
 				spreadSubsample.setOptions(opts);
@@ -90,40 +77,17 @@ public class Weka {
 				return eval;
 			case OVERSAMPLING:
 				break;
-			default:
-				LOGGER.log(Level.SEVERE, INVALIDSAMPLING);
-				
-			}
-		}catch(Exception e){
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
-		return null;
-	}
-	
-	private static Evaluation evaluateIBk(Instances training, Instances testing, String sampling){
-		IBk classifierIBk = new IBk();
-		try {
-			Evaluation eval = new Evaluation(testing);
-			switch(sampling){
-			case NO_SAMPLING:
-				classifierIBk.buildClassifier(training);
-				eval.evaluateModel(classifierIBk, testing);
-				return eval;
-			case UNDERSAMPLING:
-				FilteredClassifier fc = new FilteredClassifier();
-				fc.setClassifier(classifierIBk);
-				SpreadSubsample  spreadSubsample = new SpreadSubsample();
-				String[] opts = new String[]{ "-M", "1.0"};
-				spreadSubsample.setOptions(opts);
-				fc.setFilter(spreadSubsample);
+			case SMOTE:
+				fc.setClassifier(classifier);
+				SMOTE smote = new SMOTE();
+				smote.setInputFormat(training);
+				fc.setFilter(smote);
 				fc.buildClassifier(training);
 				eval.evaluateModel(fc, testing);
 				return eval;
-			case OVERSAMPLING:
-				break;
 			default:
 				LOGGER.log(Level.SEVERE, INVALIDSAMPLING);
-				
+				return null;
 			}
 		}catch(Exception e){
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -189,20 +153,26 @@ public class Weka {
 				defectInTrainingPercentage = (double) defectInTraining / training.numInstances() * 100;
 				defectInTestingPercentage = (double) defectInTesting / testing.numInstances() * 100;
 				
-				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateNaiveBayes(training, testing, NO_SAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
-				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateNaiveBayes(selectedTraining, selectedTesting, NO_SAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
-				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateNaiveBayes(training, testing, UNDERSAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
-				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateNaiveBayes(selectedTraining, selectedTesting, UNDERSAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateClassifier(NAIVEBAYES, training, testing, NO_SAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
+				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateClassifier(NAIVEBAYES, selectedTraining, selectedTesting, NO_SAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
+				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateClassifier(NAIVEBAYES, training, testing, UNDERSAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateClassifier(NAIVEBAYES, selectedTraining, selectedTesting, UNDERSAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateClassifier(NAIVEBAYES, training, testing, SMOTE), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, SMOTE));
+				evaluations.add(new ClassifierEvaluation(NAIVEBAYES, i+1, evaluateClassifier(NAIVEBAYES, selectedTraining, selectedTesting, SMOTE), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, SMOTE));
 				
-				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateRandomForest(training, testing, NO_SAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
-				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateRandomForest(selectedTraining, selectedTesting, NO_SAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
-				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateRandomForest(training, testing, UNDERSAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
-				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateRandomForest(selectedTraining, selectedTesting, UNDERSAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateClassifier(RANDOMFOREST, training, testing, NO_SAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
+				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateClassifier(RANDOMFOREST, selectedTraining, selectedTesting, NO_SAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
+				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateClassifier(RANDOMFOREST, training, testing, UNDERSAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateClassifier(RANDOMFOREST, selectedTraining, selectedTesting, UNDERSAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateClassifier(RANDOMFOREST, training, testing, SMOTE), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(RANDOMFOREST, i+1, evaluateClassifier(RANDOMFOREST, selectedTraining, selectedTesting, SMOTE), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
 				
-				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateIBk(training, testing, NO_SAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
-				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateIBk(selectedTraining, selectedTesting, NO_SAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
-				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateIBk(training, testing, UNDERSAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
-				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateIBk(selectedTraining, selectedTesting, UNDERSAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateClassifier(IBK, training, testing, NO_SAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
+				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateClassifier(IBK, selectedTraining, selectedTesting, NO_SAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, NO_SAMPLING));
+				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateClassifier(IBK, training, testing, UNDERSAMPLING), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateClassifier(IBK, selectedTraining, selectedTesting, UNDERSAMPLING), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, UNDERSAMPLING));
+				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateClassifier(IBK, training, testing, SMOTE), false, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, SMOTE));
+				evaluations.add(new ClassifierEvaluation(IBK, i+1, evaluateClassifier(IBK, selectedTraining, selectedTesting, SMOTE), true, trainingPercentage, defectInTrainingPercentage, defectInTestingPercentage, SMOTE));
 				
 				defectInTraining += defectInTesting;
 			}

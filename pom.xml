@@ -32,5 +32,10 @@
     	<artifactId>weka-stable</artifactId>
     	<version>3.8.0</version>
 	</dependency>
+	<dependency>
+    	<groupId>nz.ac.waikato.cms.weka</groupId>
+    	<artifactId>SMOTE</artifactId>
+    	<version>1.0.2</version>
+	</dependency>
   </dependencies>
 </project>
