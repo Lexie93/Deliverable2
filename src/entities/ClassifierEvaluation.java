@@ -11,9 +11,10 @@ public class ClassifierEvaluation {
 	private double trainingPercentage;
 	private double defectInTrainingPercentage;
 	private double defectInTestingPercentage;
+	private String sampling;
 	
 	public ClassifierEvaluation(String classifier, int trainingSize, Evaluation eval, boolean selection, double trainingPercentage,
-															double defectInTrainingPercentage, double defectInTestingPercentage) {
+												double defectInTrainingPercentage, double defectInTestingPercentage, String sampling) {
 		this.classifier = classifier;
 		this.trainingSize = trainingSize;
 		this.eval = eval;
@@ -21,6 +22,7 @@ public class ClassifierEvaluation {
 		this.trainingPercentage = trainingPercentage;
 		this.defectInTrainingPercentage = defectInTrainingPercentage;
 		this.defectInTestingPercentage = defectInTestingPercentage;
+		this.sampling = sampling;
 	}
 
 	public String getClassifier() {
@@ -49,6 +51,10 @@ public class ClassifierEvaluation {
 
 	public double getDefectInTestingPercentage() {
 		return defectInTestingPercentage;
+	}
+
+	public String getSampling() {
+		return sampling;
 	}
 	
 }

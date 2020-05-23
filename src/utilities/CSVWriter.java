@@ -113,13 +113,13 @@ public class CSVWriter {
 	            CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT);)
 				{
 	            printer.printRecord("Dataset","#TrainingRelease","%Training","%DefectiveInTraining","%DefectiveInTesting",
-	            					"Classifier","FeatureSelection","TP","TPRate","FP","FPRate","TN","TNRate","FN","FNRate","Precision","Recall","ROCArea","Kappa");
+	            					"Classifier","Sampling","FeatureSelection","TP","TPRate","FP","FPRate","TN","TNRate","FN","FNRate","Precision","Recall","ROCArea","Kappa");
 	            for ( ClassifierEvaluation evaluation : evaluations) {
 	            	selection = evaluation.hasFeatureSelection() ? "Yes" : "No";
 	            	printer.printRecord(proj, evaluation.getTrainingSize(), evaluation.getTrainingPercentage(),
 	            			evaluation.getDefectInTrainingPercentage(), evaluation.getDefectInTestingPercentage(),
-	            			evaluation.getClassifier(),
-	            			selection, evaluation.getEval().numTruePositives(1), evaluation.getEval().truePositiveRate(1),
+	            			evaluation.getClassifier(), evaluation.getSampling(), selection,
+	            			evaluation.getEval().numTruePositives(1), evaluation.getEval().truePositiveRate(1),
 	            			evaluation.getEval().numFalsePositives(1), evaluation.getEval().falsePositiveRate(1),
 	            			evaluation.getEval().numTrueNegatives(1), evaluation.getEval().trueNegativeRate(1),
 	            			evaluation.getEval().numFalseNegatives(1), evaluation.getEval().falseNegativeRate(1),
