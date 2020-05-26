@@ -14,14 +14,14 @@ public class ClassifierEvaluation {
 	private String sampling;
 	
 	public ClassifierEvaluation(String classifier, int trainingSize, Evaluation eval, boolean selection, double trainingPercentage,
-												double defectInTrainingPercentage, double defectInTestingPercentage, String sampling) {
+												double[] defects, String sampling) {
 		this.classifier = classifier;
 		this.trainingSize = trainingSize;
 		this.eval = eval;
 		this.selection = selection;
 		this.trainingPercentage = trainingPercentage;
-		this.defectInTrainingPercentage = defectInTrainingPercentage;
-		this.defectInTestingPercentage = defectInTestingPercentage;
+		this.defectInTrainingPercentage = defects[0];
+		this.defectInTestingPercentage = defects[1];
 		this.sampling = sampling;
 	}
 
