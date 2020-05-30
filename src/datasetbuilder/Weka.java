@@ -28,7 +28,7 @@ import entities.ClassifierEvaluation;
 public class Weka {
 	
 	private static final Logger LOGGER = Logger.getLogger(Weka.class.getName());
-	private static final double SPLIT_PERCENTAGE = 0.66;
+	private static final double SPLIT_PERCENTAGE = 1;
 	private static final String NAIVEBAYES = "NaiveBayes";
 	private static final String RANDOMFOREST = "RandomForest";
 	private static final String IBK = "IBk";

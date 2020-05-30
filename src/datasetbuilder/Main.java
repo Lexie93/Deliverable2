@@ -47,12 +47,13 @@ public class Main {
 		   ArrayList<Release> releases = new ArrayList<>(totalReleases.subList(0, totalReleases.size()/2 + (totalReleases.size()%2)));
 		   
 		   gitRetriever.setReleasesMetrics(releases);
+		   		   
+		   csvWriter.printReleasesInfo(outnameInfo, totalReleases);
+		   csvWriter.printReleasesFiles(outnameFiles, releases);
+		   csvWriter.printJiraTickets(outnameTicket, tickets);
 		   
 		   evaluations = (ArrayList<ClassifierEvaluation>) Weka.walkForwardEvaluations("C:/Users/Alex/Desktop/Università/ISW2/Falessi/Progetto/progetto/Deliverable2/BOOKKEEPERVersionFiles.csv");
 		   
-		   csvWriter.printReleasesInfo(outnameInfo, releases);
-		   csvWriter.printReleasesFiles(outnameFiles, releases);
-		   csvWriter.printJiraTickets(outnameTicket, tickets);
 		   csvWriter.printEvaluations(projName, outnameEvals, evaluations);
 	   }
 }

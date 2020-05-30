@@ -74,14 +74,15 @@ public class RetrieveJiraTickets {
 	      return tickets;
 	   }
 	   
-	   private static void prepareTicketsForProportion(List<JiraTicket> tickets){
+	   private static List<JiraTicket> prepareTicketsForProportion(List<JiraTicket> tickets){
 		   Iterator<JiraTicket> iter = tickets.iterator();
 		   while(iter.hasNext()){
 			   JiraTicket ticket = iter.next();
-			   if (ticket.getFixedVersion()==null || ticket.getFixedVersion().equals(ticket.getOpeningVersion())){
+			   if (ticket.getFixedVersion()==null){
 				   iter.remove();
 			   }
 		   }
+		   tickets.sort((t1, t2) -> t1.getFixedVersion().getDate().compareTo(t2.getFixedVersion().getDate()));
 		   for(int i=0; i<tickets.size(); i++){
 			   if (tickets.get(i).getInjectedVersion()==null){
 				   tickets.get(i).setInjectedVersion(tickets.get(i).getOpeningVersion());
@@ -89,6 +90,7 @@ public class RetrieveJiraTickets {
 			   }
 			   else break;
 		   }
+		   return tickets;
 	   }
 	   
 	   private static void proportionMovingWindow(List<JiraTicket> tickets, List<Release> releases){
@@ -102,6 +104,7 @@ public class RetrieveJiraTickets {
 			   return;
 		   for(JiraTicket ticket : tickets){
 			   if (ticket.getInjectedVersion()!=null){
+				   if (!ticket.getFixedVersion().equals(ticket.getOpeningVersion())){
 				   if (!ticket.hasEstimatedIv()){
 					   p = (((double) ticket.getFixedVersion().getVersion()) - ticket.getInjectedVersion().getVersion()) / (((double) ticket.getFixedVersion().getVersion()) - ticket.getOpeningVersion().getVersion());
 					   if (counter==windowSize){
@@ -113,8 +116,9 @@ public class RetrieveJiraTickets {
 					   window.add(p);
 					   sum+=p;
 				   }
+				   }
 			   } else {
-				   predictedIV = ticket.getFixedVersion().getVersion() - ((int) (sum/windowSize)) * (ticket.getFixedVersion().getVersion() - ticket.getOpeningVersion().getVersion());
+				   predictedIV = (ticket.getFixedVersion().getVersion() -  (int) Math.ceil((sum/windowSize) * (ticket.getFixedVersion().getVersion() - ticket.getOpeningVersion().getVersion())));
 				   predictedIV = Math.max(predictedIV, 1);
 				   ticket.setInjectedVersion(releases.get(predictedIV-1));
 				   ticket.setEstimatedIv(true);
@@ -190,9 +194,13 @@ public class RetrieveJiraTickets {
 				   setOV(releases, ticket);
 			   }
 		   }
-		   prepareTicketsForProportion(tickets);
-		   tickets.sort((t1, t2) -> t1.getFixedVersion().getDate().compareTo(t2.getFixedVersion().getDate()));
+		   tickets = prepareTicketsForProportion(tickets);
 		   proportionMovingWindow(tickets, releases);
+		   for (JiraTicket ticket : tickets) {
+			   if (ticket.getInjectedVersion()!=null && ticket.getInjectedVersion().getDate().compareTo(ticket.getOpeningVersion().getDate())>0){
+				   ticket.setInjectedVersion(ticket.getOpeningVersion());
+			   }
+		   }
 		   setBugginessAndFixes(tickets, releases, gitRetriever);
 	   }
 	
