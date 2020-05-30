@@ -104,8 +104,7 @@ public class RetrieveJiraTickets {
 			   return;
 		   for(JiraTicket ticket : tickets){
 			   if (ticket.getInjectedVersion()!=null){
-				   if (!ticket.getFixedVersion().equals(ticket.getOpeningVersion())){
-				   if (!ticket.hasEstimatedIv()){
+				   if (!ticket.getFixedVersion().equals(ticket.getOpeningVersion()) && !ticket.hasEstimatedIv()){
 					   p = (((double) ticket.getFixedVersion().getVersion()) - ticket.getInjectedVersion().getVersion()) / (((double) ticket.getFixedVersion().getVersion()) - ticket.getOpeningVersion().getVersion());
 					   if (counter==windowSize){
 						   sum-=window.get(0);
@@ -115,7 +114,6 @@ public class RetrieveJiraTickets {
 					   }
 					   window.add(p);
 					   sum+=p;
-				   }
 				   }
 			   } else {
 				   predictedIV = (ticket.getFixedVersion().getVersion() -  (int) Math.ceil((sum/windowSize) * (ticket.getFixedVersion().getVersion() - ticket.getOpeningVersion().getVersion())));
