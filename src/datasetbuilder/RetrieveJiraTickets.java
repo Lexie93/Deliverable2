@@ -116,7 +116,7 @@ public class RetrieveJiraTickets {
 					   sum+=p;
 				   }
 			   } else {
-				   predictedIV = (ticket.getFixedVersion().getVersion() -  (int) Math.ceil((sum/windowSize) * (ticket.getFixedVersion().getVersion() - ticket.getOpeningVersion().getVersion())));
+				   predictedIV = (ticket.getFixedVersion().getVersion() -  (int) Math.ceil((sum/Math.max(1, counter)) * (ticket.getFixedVersion().getVersion() - ticket.getOpeningVersion().getVersion())));
 				   predictedIV = Math.max(predictedIV, 1);
 				   ticket.setInjectedVersion(releases.get(predictedIV-1));
 				   ticket.setEstimatedIv(true);
